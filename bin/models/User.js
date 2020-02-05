@@ -67,19 +67,51 @@ userSchema.methods.generateAuthToken = async function () {
 /////////////////////-- DB QUERYS -- /////////////////////////////////////////////////////////
 
 userSchema.methods.addFriend = async function(friend) {
+
     try {
         const doc = await Friends.create({
             user_id : this._id,
             friend_id: friend._id
         })
-        console.log(doc)
+      return
     } catch (e) {
-        console.log(e)
-    }
-
-    
+       throw new e
+    } 
 }
 
+userSchema.methods.acceptFriendRequest = async function(friend) {
+   
+
+   
+       
+}
+
+
+//find friends_IDs that associate with user_id
+userSchema.methods.friendOfMine = function() {
+    return Friends.find({user_id: this._id})
+}
+
+//find user_IDs that associate with friend_id
+userSchema.methods.friendOf = function() {
+    return Friends.find({friend_id: this._id})
+}
+
+
+//find users whom you send requests
+userSchema.methods.friendRequests = async function() {
+   return await this.friendOfMine().find({accepted: 'false'})
+}
+
+//find users who send requests to you
+userSchema.methods.friendRequestsPending = async function() {
+    return this.friendOf().find({accepted: 'false'})
+}
+
+//find list of friends
+userSchema.methods.friends = async function() {
+    return await this.friendOfMine().find({accepted: 'true'})
+}
 
 
 

@@ -21,9 +21,31 @@ router.post('/add', authMdw , async function(req, res) {
 
     //TODO if try to befriend yourself
 
-    user.addFriend(friend)
-
+    await user.addFriend(friend)
+    
     res.send({msg:`You send reqest to ${friend.username}`})
 })
 
+
+router.post('/accept', authMdw , async function(req, res) {
+
+    const user = req.user
+    try {
+        const friend = await User.findById(req.body.friend_id)
+    if (!friend) {
+        res.status(400).send({msg: 'No such user was found'})
+        return
+    }
+
+
+      //TODO if user did not have request pending from specific user(friend)
+
+    await user.acceptFriendRequest(friend)
+    
+    res.end()
+    } catch (e) {
+        console.log(e)
+    }
+
+ })
 module.exports = router
