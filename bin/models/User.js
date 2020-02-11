@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Friends = require('../models/Friends')
 
+
 //User schema creation
 const userSchema = mongoose.Schema({
     username : {
@@ -66,24 +67,24 @@ userSchema.methods.generateAuthToken = async function () {
 
 /////////////////////-- DB QUERYS -- /////////////////////////////////////////////////////////
 
-userSchema.methods.addFriend = async function(friend) {
-
-    try {
-        const doc = await Friends.create({
+userSchema.methods.addFriend = function(friend) {
+    return Friends.create({
             user_id : this._id,
             friend_id: friend._id
         })
-      return
-    } catch (e) {
-       throw new e
-    } 
 }
 
-userSchema.methods.acceptFriendRequest = async function(friend) {
-   
+userSchema.methods.acceptFriendRequest = function(friend) {
+    return this.friendRequestsPending().updateOne({user_id: friend._id},{$set:{accepted: true}})
+}
 
-   
-       
+
+userSchema.methods.deleteFriend = function(friend) {
+    return this.friends().deleteOne({$or: 
+        [
+            {user_id: friend._id}, 
+            {friend_id: friend._id}
+        ]})
 }
 
 
@@ -99,21 +100,44 @@ userSchema.methods.friendOf = function() {
 
 
 //find users whom you send requests
-userSchema.methods.friendRequests = async function() {
-   return await this.friendOfMine().find({accepted: 'false'})
+userSchema.methods.friendRequests = function() {
+   return this.friendOfMine().find({accepted: 'false'})
 }
 
+
 //find users who send requests to you
-userSchema.methods.friendRequestsPending = async function() {
+userSchema.methods.friendRequestsPending = function() {
     return this.friendOf().find({accepted: 'false'})
 }
 
+//check if you have sent request to specific user (!!!Convert return value to Boolean AFTER await!!!)
+userSchema.methods.hasSentRequest = function(friend) {
+    return this.friendRequests().find({friend_id: friend._id}).countDocuments() 
+ }
+
+//check if you have request from specific user (!!!Convert return value to Boolean AFTER await!!!)
+userSchema.methods.hasFriendRequest = function(friend) {
+    return this.friendRequestsPending().find({user_id: friend._id}).countDocuments() 
+ }
+
 //find list of friends
-userSchema.methods.friends = async function() {
-    return await this.friendOfMine().find({accepted: 'true'})
+userSchema.methods.friends =  function() {
+    return Friends.find({$or:
+        [ 
+            {user_id: this._id},
+            {friend_id: this._id}
+        ]}).where('accepted').equals(true) 
 }
 
 
+//check if you are friends with specific user (!!!Convert return value to Boolean AFTER await!!!)
+userSchema.methods.isFriendWith = function(friend) {
+    return this.friends().find({$or:
+        [ 
+            {user_id: this._id, friend_id: friend._id},
+            {user_id: friend._id, friend_id: this._id }
+        ]}).countDocuments() 
+}
 
 const User = mongoose.model('User', userSchema)
 
