@@ -86,7 +86,7 @@ userSchema.methods.deleteFriend = function(friend) {
             {friend_id: friend._id}
         ]})
 }
-
+//////////////////////////////////////////////////////////////
 
 //find friends_IDs that associate with user_id
 userSchema.methods.friendOfMine = function() {
@@ -98,6 +98,7 @@ userSchema.methods.friendOf = function() {
     return Friends.find({friend_id: this._id})
 }
 
+//////////////////////////////////////////////////////////////////
 
 //find users whom you send requests
 userSchema.methods.friendRequests = function() {
@@ -110,6 +111,8 @@ userSchema.methods.friendRequestsPending = function() {
     return this.friendOf().find({accepted: 'false'})
 }
 
+/////////////////////////////////////////////////////////////////
+
 //check if you have sent request to specific user (!!!Convert return value to Boolean AFTER await!!!)
 userSchema.methods.hasSentRequest = function(friend) {
     return this.friendRequests().find({friend_id: friend._id}).countDocuments() 
@@ -119,6 +122,17 @@ userSchema.methods.hasSentRequest = function(friend) {
 userSchema.methods.hasFriendRequest = function(friend) {
     return this.friendRequestsPending().find({user_id: friend._id}).countDocuments() 
  }
+
+ //check if you are friends with specific user (!!!Convert return value to Boolean AFTER await!!!)
+userSchema.methods.isFriendWith = function(friend) {
+    return this.friends().find({$or:
+        [ 
+            {user_id: this._id, friend_id: friend._id},
+            {user_id: friend._id, friend_id: this._id }
+        ]}).countDocuments() 
+}
+
+ //////////////////////////////////////////////////////////////
 
 //find list of friends
 userSchema.methods.friends =  function() {
@@ -130,14 +144,7 @@ userSchema.methods.friends =  function() {
 }
 
 
-//check if you are friends with specific user (!!!Convert return value to Boolean AFTER await!!!)
-userSchema.methods.isFriendWith = function(friend) {
-    return this.friends().find({$or:
-        [ 
-            {user_id: this._id, friend_id: friend._id},
-            {user_id: friend._id, friend_id: this._id }
-        ]}).countDocuments() 
-}
+
 
 const User = mongoose.model('User', userSchema)
 

@@ -1,11 +1,13 @@
-const test = function() {
-    this.prop1 = '1'
-    console.log(this.prop1)
-    new test()
-    this.prop2 = '2'
-    this.method1 = function() {
-        const a = new test()
-    }
-}
+let a = [44, 96, 75, 96]  
+let b = [1936, 9216, 5625, 9217]
 
-const a = new test()
+
+
+for(let i =0; i < a.length; i++) {
+    let number = Math.pow(a[i],2)
+    if (b.includes(number)) {
+        let index = b.indexOf(number)
+        b[index] = null
+        console.log('+')}
+    else console.log('-')
+}
