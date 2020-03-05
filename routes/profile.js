@@ -6,16 +6,23 @@ const authMdw = require('../bin/middleware/authMdw')
 //get user page
 
 
-router.get('/:user_id', async function(req, res)  {
+router.get('/:user_id',authMdw ,async function(req, res)  {
     
     const user_id = req.params.user_id
+    const theUser = req.user
+    
 
     try {
         const user = await User.findById(user_id)
         
-        res.send({user})
+        res.send({
+            user : user,
+            isRequestSend: Boolean(await theUser.hasSentRequest(user)),
+            isRequestPending: Boolean(await theUser.hasFriendRequest(user)),
+            isFriend: Boolean(await theUser.isFriendWith(user))
+        })
     } catch(e) {
-        res.status(400).send({message: e.message})
+        res.status(404).send({})
     }
 })
 

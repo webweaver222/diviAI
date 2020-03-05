@@ -7,8 +7,16 @@ const authMdw = require('../bin/middleware/authMdw')
 router.get('/',authMdw, async function(req, res, next) {
 
   
-
-  res.send({user: req.user})
-});
+ 
+  res.status(200).send({user: req.user})
+})
 
 module.exports = router;
+
+
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}   

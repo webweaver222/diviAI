@@ -4,6 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose')
+const cors = require('cors')
+
 
 
 
@@ -23,9 +25,18 @@ var postRouter = require('./routes/post')
 
 var app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
+
+
+
+
+var corsOptions = {
+  origin: 'http://localhost:8000',
+  optionsSuccessStatus: 200,
+  credentials: true // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+
+app.use(cors(corsOptions))
+
 
 app.use(logger('dev'));
 app.use(express.json());

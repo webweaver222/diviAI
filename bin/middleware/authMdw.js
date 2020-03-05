@@ -5,8 +5,7 @@ const jwt = require('jsonwebtoken')
 const auth = async function(req, res,next) {
     const token = req.cookies.user
     
-
-
+    
     //check if token form user is valid
     try {
         const decoded = jwt.verify(token, 'omaha222')

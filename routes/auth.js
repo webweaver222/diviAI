@@ -5,7 +5,7 @@ const authMdw = require('../bin/middleware/authMdw')
 
 
 router.post('/signup', async function(req, res) {
-
+    console.log(req.body)
     let user = new User(req.body)
 
     //TODO validation
@@ -13,12 +13,12 @@ router.post('/signup', async function(req, res) {
 
     //register new user
     try {
+      
         user  = await user.save()
         const token = await user.generateAuthToken()
-        res.cookie('user', token).send({user})
+        return res.cookie('user', token).send({user})
     } catch (e) {
-      console.log(e)
-      res.send({message: e.message})
+      return res.send({message: e.message})
     }
 
     
@@ -31,7 +31,7 @@ router.post('/signup', async function(req, res) {
     try {
         const user = await User.findByCred(req.body.email, req.body.password)
         const token = await user.generateAuthToken() 
-        res.cookie('user', token).send(user)
+        res.cookie('user', token).send({user})
     } catch (e) {
         res.status(400).send({message: e.message})
     }
