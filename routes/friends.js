@@ -56,4 +56,26 @@ router.post('/accept', authMdw , async function(req, res) {
             console.log(e)
         }
  })
+
+
+ router.post('/remove' , authMdw, async function(req, res) {
+     const user = req.user
+
+     const friend = await User.findById(req.body.friend_id)
+
+     if(!friend) {
+        return res.status(400).send({msg: 'No such user was found'})
+    }
+
+    if (!Boolean(await user.isFriendWith(friend))) {
+        return res.send({msg: 'You are not friends with that user'})
+    }
+
+    await user.deleteFriend(friend)
+
+    return res.status(200).end()
+
+
+
+ })
 module.exports = router

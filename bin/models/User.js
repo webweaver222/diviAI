@@ -79,12 +79,15 @@ userSchema.methods.acceptFriendRequest = function(friend) {
 }
 
 
-userSchema.methods.deleteFriend = function(friend) {
-    return this.friends().deleteOne({$or: 
+userSchema.methods.deleteFriend = async function(friend) {
+
+   /* const friends = await this.friends().exec()
+
+    return await friends.remove({$or: 
         [
             {user_id: friend._id}, 
             {friend_id: friend._id}
-        ]})
+        ]})*/
 }
 //////////////////////////////////////////////////////////////
 
@@ -125,22 +128,46 @@ userSchema.methods.hasFriendRequest = function(friend) {
 
  //check if you are friends with specific user (!!!Convert return value to Boolean AFTER await!!!)
 userSchema.methods.isFriendWith = function(friend) {
-    return this.friends().find({$or:
-        [ 
-            {user_id: this._id, friend_id: friend._id},
-            {user_id: friend._id, friend_id: this._id }
-        ]}).countDocuments() 
+  
+    return this.friends().match(
+       {friend_id: friend._id}
+    )
+    
 }
 
  //////////////////////////////////////////////////////////////
 
 //find list of friends
 userSchema.methods.friends =  function() {
-    return Friends.find({$or:
-        [ 
-            {user_id: this._id},
-            {friend_id: this._id}
-        ]}).where('accepted').equals(true) 
+
+    return Friends.aggregate([
+        { $match: { accepted: true } },
+        {$match: {
+                $or: [
+                    { user_id: this._id },
+                    { friend_id: this._id }
+                ]
+            }
+        },
+        {$project: {
+                _id: 0,
+                friend_id: {
+                    $cond: {
+                        if: { $ne: ["$user_id", this._id] },
+                        then: "$user_id",
+                        else:
+                        {
+                            $cond: {
+                                if: { $ne: [this._id, "$friend_id"] },
+                                then: "$friend_id",
+                                else: ''
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ])
 }
 
 
