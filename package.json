@@ -8,6 +8,7 @@
     "dbconn": "cd C:/Users/green/mongodb/bin && mongod.exe --port 27017 --dbpath C:/Users/green/mongodb-data "
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
     "concurrently": "^5.1.0",
     "cookie-parser": "~1.4.4",

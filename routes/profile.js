@@ -1,10 +1,12 @@
 var express = require('express');
 var router = express.Router();
-const User = require('../bin/models/User')
+
+const FriendsService = require('../bin/services/FriendsService')
+const UserService = require('../bin/services/UserService')
+const PostService = require('../bin/services/PostService')
 const authMdw = require('../bin/middleware/authMdw')
 
 //get user page
-
 
 router.get('/:username',authMdw ,async function(req, res)  {
     
@@ -13,29 +15,38 @@ router.get('/:username',authMdw ,async function(req, res)  {
     
 
     try {
-        const user = await User.findOne({username})
+        let user = await UserService.findByName(username)
+        const accepted = await FriendsService.friends(user).exec()
+        const pending = await FriendsService.friendRequestsPending(user)
 
-        console.log(Boolean(await theUser.isFriendWith(user)))
-        const relations = await theUser.friends().exec()
+        user = await PostService.getPosts(user)
 
-        const friends = await Promise.all(relations.map(async function(relation) {
-            return await User.findById(relation.friend_id, {
-                password: false,
-                tokens: false,
-                timestamp: false
-            })
+        let friendsAccepted = await Promise.all(accepted.map(async (relation) =>{
+           const friend = await UserService.findById(relation.friend_id, {
+               tokens: false,
+               password: false
+           })
+           return await PostService.getPosts(friend) 
         }
         ))
-        
 
-      
+        const friendsPending = await Promise.all(pending.map(async (relation) => {
+            return await UserService.findById(relation.user_id)
+        }
+        ))
+
+        
 
         res.send({
             user : user,
-            friendsList: friends,
-            isRequestSend: Boolean(await theUser.hasSentRequest(user)),
-            isRequestPending: Boolean(await theUser.hasFriendRequest(user)),
-            isFriend: ((await theUser.isFriendWith(user)).length > 0) ? true: false,
+            posts: await PostService.getAllPosts(user, friendsAccepted),
+            friendsList: {
+                accepted: friendsAccepted,
+                pending: friendsPending
+            },
+            isRequestSend: Boolean(await FriendsService.hasSentRequest(theUser, user)),
+            isRequestPending: Boolean(await FriendsService.hasFriendRequest(theUser, user)),
+            isFriend: ((await FriendsService.isFriendWith(theUser, user)).length > 0) ? true: false,
         })
     } catch(e) {
         console.log(e)
@@ -47,7 +58,6 @@ router.get('/:username',authMdw ,async function(req, res)  {
 router.get('/edit', authMdw, (req, res) => {
 
 })
-
 
 
 module.exports = router

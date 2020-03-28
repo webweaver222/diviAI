@@ -6,9 +6,12 @@ const authMdw = require('../bin/middleware/authMdw')
 /* GET home page. */
 router.get('/',authMdw, async function(req, res, next) {
 
-  
+  const theUser = req.user
  
-  res.status(200).send({user: req.user})
+ 
+  res.status(200).send({
+    user: theUser
+  })
 })
 
 module.exports = router;

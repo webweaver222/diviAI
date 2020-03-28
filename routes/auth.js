@@ -1,38 +1,36 @@
 var express = require('express');
 var router = express.Router();
-const User = require('../bin/models/User')
+const UserService = require('../bin/services/UserService')
 const authMdw = require('../bin/middleware/authMdw')
 
 
 router.post('/signup', async function(req, res) {
-    console.log(req.body)
-    let user = new User(req.body)
+  
+    let user = UserService.createUser(req.body)
 
     //TODO validation
 
 
     //register new user
     try {
-      
         user  = await user.save()
-        const token = await user.generateAuthToken()
+        const token = await UserService.generateAuthToken(user)
         return res.cookie('user', token).send({user})
     } catch (e) {
       return res.send({message: e.message})
     }
 
-    
-   
   });
   
 
   //login
   router.post('/signin', async function(req, res) {
     try {
-        const user = await User.findByCred(req.body.email, req.body.password)
-        const token = await user.generateAuthToken() 
+        const user = await UserService.findByCred(req.body.email, req.body.password)
+        const token = await UserService.generateAuthToken(user) 
         res.cookie('user', token).send({user})
     } catch (e) {
+      console.log(e)
         res.status(400).send({message: e.message})
     }
   
