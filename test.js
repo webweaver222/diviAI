@@ -1,16 +1,9 @@
-var KingJoffery = (function () {
-  function KingJoffery() {
+var a = [3,1,5,6,78,9,0]
+let max = a[1];
+a.forEach(n => {
+    if (n > max) {
+      max = n
+    }
+})
 
-  }
-  KingJoffery.prototype.makeDecision = function () {
-    console.log('kill')
-  };
-  KingJoffery.prototype.marry = function () {
-    
-  };
-  return KingJoffery
-}
-)();
-
-
-console.log(KingJoffery.makeDecision)
+console.log(max)

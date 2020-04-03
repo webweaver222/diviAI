@@ -1,5 +1,5 @@
 const Post = require('../models/Post')
-const User = require('../models/User')
+//const User = require('../models/User')
 
 
 module.exports = {
@@ -9,11 +9,17 @@ module.exports = {
     findById: function(id) {
         return Post.findById(id)
     },
+    deleteAll: function(match) {
+        return Post.deleteMany(match)
+    },
+    deleteById: function(id) {
+        return Post.deleteOne({_id: id})
+    },
     getPosts: function (user) {
         return  user.populate('posts').execPopulate()
 
     },
-    getAllPosts: function (user, friendsAccepted) {
+    getAllPosts: function (user, friendsAccepted, limit) {
         return Post.aggregate([
             {$match: {
                 $or : [
@@ -26,16 +32,53 @@ module.exports = {
                 ]
             }},
             {$sort: {timestamp: -1}},
-            {$lookup: {
+            {
+                $lookup: {
                 from: "users",
                 localField: "user",
                 foreignField: "_id",
                 as: "user"
+                }
+            },
+            {$unwind: "$user"},
+            {
+                $lookup: {
+                    from: "posts",
+                    localField: "parent",
+                    foreignField: "_id",
+                    as: "parent"
+                }
+            },
+            {$unwind: {
+                path :'$parent', 
+                preserveNullAndEmptyArrays: true}
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "parent.user",
+                    foreignField: "_id",
+                    as: "parent.user"
+                }
+            },
+            {$unwind: {
+                path :'$parent.user', 
+                preserveNullAndEmptyArrays: true}
+            },
+            {$project: {
+                "user.tokens" : 0,
+                "user.password ": 0
             }},
             {$project: {
-                "user.password": false,
-                "user.tokens": false
-            }}
+                "body" : 1,
+                "user": 1,
+                "timestamp":1,
+                "parent": {
+                    $cond: [ { $eq: [ "$parent", {} ] }, null, "$parent" ]
+                }
+            }},
+           {$limit: Number(limit)}
+          
         ])
-    }
+    } 
 }

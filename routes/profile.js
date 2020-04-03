@@ -8,9 +8,10 @@ const authMdw = require('../bin/middleware/authMdw')
 
 //get user page
 
-router.get('/:username',authMdw ,async function(req, res)  {
+router.get('/:username/:limit',authMdw ,async function(req, res)  {
+   
+    const {username, limit} = req.params
     
-    const username = req.params.username
     const theUser = req.user
     
 
@@ -26,7 +27,7 @@ router.get('/:username',authMdw ,async function(req, res)  {
                tokens: false,
                password: false
            })
-           return await PostService.getPosts(friend) 
+           return friend
         }
         ))
 
@@ -35,11 +36,10 @@ router.get('/:username',authMdw ,async function(req, res)  {
         }
         ))
 
-        
-
+        console.log(limit)
         res.send({
             user : user,
-            posts: await PostService.getAllPosts(user, friendsAccepted),
+            posts: await PostService.getAllPosts(user, friendsAccepted, limit),
             friendsList: {
                 accepted: friendsAccepted,
                 pending: friendsPending

@@ -27,12 +27,6 @@ const userSchema = mongoose.Schema({
      }],
 
 
-     
-     posts: [{
-            type: mongoose.Types.ObjectId,
-            ref: 'Post'
-     }],
-
      timestamp: { 
         type: Date, 
         default: Date.now
