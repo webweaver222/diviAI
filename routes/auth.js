@@ -15,7 +15,9 @@ router.post('/signup', async function(req, res) {
     try {
         user  = await user.save()
         const token = await UserService.generateAuthToken(user)
-        return res.cookie('user', token).send({user})
+        return res.status(200)
+        .cookie('user', token)
+        .send({user})
     } catch (e) {
       return res.send({message: e.message})
     }
@@ -28,7 +30,9 @@ router.post('/signup', async function(req, res) {
     try {
         const user = await UserService.findByCred(req.body.email, req.body.password)
         const token = await UserService.generateAuthToken(user) 
-        res.cookie('user', token).send({user})
+        res.status(200)
+        .cookie('user', token)
+        .send({user})
     } catch (e) {
       console.log(e)
         res.status(400).send({message: e.message})

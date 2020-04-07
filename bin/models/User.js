@@ -25,7 +25,11 @@ const userSchema = mongoose.Schema({
         }
         
      }],
-
+    
+     avatarUrl: {
+        type: String,
+        default: ''
+     },
 
      timestamp: { 
         type: Date, 

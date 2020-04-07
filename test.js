@@ -1,9 +1,19 @@
-var a = [3,1,5,6,78,9,0]
-let max = a[1];
-a.forEach(n => {
-    if (n > max) {
-      max = n
-    }
-})
+const Person = function (name, gender) {
+  this.name = name
+  this.gender = gender
+  this.walk = function () {
+    console.log(this)
+  }
+}
 
-console.log(max)
+Person.prototype.fuck = function() {
+  console.log('fuck')
+}
+
+const Judy = function(name, gender) {
+  Person.call(this, name, gender)
+}
+
+const Judy1 = new Person('alex1', 'male')
+
+console.log(Person.prototype)

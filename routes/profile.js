@@ -4,6 +4,7 @@ var router = express.Router();
 const FriendsService = require('../bin/services/FriendsService')
 const UserService = require('../bin/services/UserService')
 const PostService = require('../bin/services/PostService')
+const CloudinaryService = require('../bin/services/CloudinaryService')
 const authMdw = require('../bin/middleware/authMdw')
 
 //get user page
@@ -36,7 +37,7 @@ router.get('/:username/:limit',authMdw ,async function(req, res)  {
         }
         ))
 
-        console.log(limit)
+
         res.send({
             user : user,
             posts: await PostService.getAllPosts(user, friendsAccepted, limit),
@@ -55,8 +56,25 @@ router.get('/:username/:limit',authMdw ,async function(req, res)  {
 })
 
 
-router.get('/edit', authMdw, (req, res) => {
 
+
+
+router.post('/edit', authMdw, async (req, res) => {
+    const {base64} = req.body
+    const user = req.user
+
+    const Cloudinary = new CloudinaryService()
+    try {
+        const res = await Cloudinary.save(base64)
+        user.avatarUrl = res.url
+        await user.save()
+        return res.status(200).end()
+    } catch (e) {
+        console.log('Error:', e);
+        return res.end()
+    }
+
+    return res.end()
 })
 
 

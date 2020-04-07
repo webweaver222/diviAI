@@ -36,8 +36,15 @@ router.post('/reply', authMdw, processPost)
 
 
 router.post('/edit', authMdw, async (req, res) => { 
-    console.log(req.body)
-    return res.end()
+    const {text, post_id} = req.body
+    if (text === '' || text === null)  return res.end()
+
+    const post = await PostService.findById(post_id)
+
+    await post.update({body: text})
+
+    
+    return res.status(200).end()
 })
 
 
