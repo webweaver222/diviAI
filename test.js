@@ -12,8 +12,11 @@ Person.prototype.fuck = function() {
 
 const Judy = function(name, gender) {
   Person.call(this, name, gender)
+  console.log(this)
 }
 
-const Judy1 = new Person('alex1', 'male')
+const Judy1 = new Judy('alex1', 'male')
 
-console.log(Person.prototype)
+const a = [1,2,3,4,6,7,8]
+
+console.log(a.splice(1,2))

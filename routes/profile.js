@@ -56,25 +56,49 @@ router.get('/:username/:limit',authMdw ,async function(req, res)  {
 })
 
 
-
-
-
 router.post('/edit', authMdw, async (req, res) => {
+    const  {body: updates , user} = req
+
+    const updatesArr = Object.keys(updates)
+
+
+    if (updatesArr.some((el) => 
+        updates[el] !== user[el])) {
+        updatesArr.forEach(prop => {
+            user[prop] = updates[prop]
+        })
+       
+        await user.save()
+        return res.status(200).send({
+            user: user, 
+            msg: 'Profile successfully updated'
+        })
+    }
+    
+    return res.status(304).end()
+
+})
+
+
+router.post('/avatar', authMdw, async (req, res) => {
     const {base64} = req.body
     const user = req.user
 
+    
     const Cloudinary = new CloudinaryService()
     try {
-        const res = await Cloudinary.save(base64)
-        user.avatarUrl = res.url
+        const avatar = await Cloudinary.save(base64)
+        user.avatarUrl = avatar.url
         await user.save()
-        return res.status(200).end()
+        return res.status(200).send({
+            user: user, 
+            msg: 'Avatar successfully updated'})
     } catch (e) {
         console.log('Error:', e);
         return res.end()
     }
 
-    return res.end()
+
 })
 
 

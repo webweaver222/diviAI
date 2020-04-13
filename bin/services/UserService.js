@@ -19,7 +19,9 @@ module.exports = {
     findByName: function(name, projection = null) {
         return User.findOne({username: name}, projection )
     },
-
+    findByEmail: function(email, projection = null) {
+        return User.findOne({email: email}, projection )
+    },
     // define method to find user by his credentials
     findByCred : async function(email, password) {
         const user = await User.findOne({email})

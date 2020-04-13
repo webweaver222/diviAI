@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 
 const auth = async function(req, res,next) {
     const token = req.cookies.user
-    
+   
     
     //check if token form user is valid
     try {
@@ -17,7 +17,7 @@ const auth = async function(req, res,next) {
         req.user = user
         next()
     } catch (e) {
-        //TODO write notification{
+        console.log(e)
             res.status(401).send({error:'Please authenticate!'})
     }
 }
