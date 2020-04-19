@@ -2,7 +2,7 @@
 
 API for mini social network
 
-#features
+# features
 
 - add/remove friends
 - write/answer posts
