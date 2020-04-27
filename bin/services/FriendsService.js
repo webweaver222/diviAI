@@ -98,8 +98,46 @@ module.exports = {
                         }
                     }
                 }
-            }
+            },
+
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "friend_id",
+                    foreignField: "_id",
+                    as: "friend_id"
+                }
+            },
+            {$unwind: "$friend_id"},
+            
+
+            {$project:{
+                "avatarUrl" : "$friend_id.avatarUrl",
+                "username" : "$friend_id.username",
+                "email": '$friend_id.email',
+                "timestamp": '$friend_id.timestamp',
+            }}
         ])
-    }   
+    } ,
+
+    pendings: function(user) {
+        return Friends.aggregate([
+            { $match: {
+                $and: [
+                    {friend_id: user._id},
+                    { accepted: false }
+                ]
+            }
+            },/*
+        {
+            $lookup: {
+                from: "users",
+                localField: "friend_id",
+                foreignField: "_id",
+                as: "friend_id"
+            }
+        }*/
+        ]) 
+    }
 }
 

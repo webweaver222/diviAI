@@ -18,20 +18,17 @@ router.get('/:username/:limit',authMdw ,async function(req, res)  {
 
     try {
         let user = await UserService.findByName(username)
+      
+
         const accepted = await FriendsService.friends(user).exec()
+
         const pending = await FriendsService.friendRequestsPending(user)
 
+        console.log(await FriendsService.pendings(user).exec())
+       
         user = await PostService.getPosts(user)
 
-        let friendsAccepted = await Promise.all(accepted.map(async (relation) =>{
-           const friend = await UserService.findById(relation.friend_id, {
-               tokens: false,
-               password: false
-           })
-           return friend
-        }
-        ))
-
+     
         const friendsPending = await Promise.all(pending.map(async (relation) => {
             return await UserService.findById(relation.user_id)
         }
@@ -40,9 +37,9 @@ router.get('/:username/:limit',authMdw ,async function(req, res)  {
 
         res.send({
             user : user,
-            posts: await PostService.getAllPosts(user, friendsAccepted, limit),
+            posts: await PostService.getAllPosts(user, accepted, limit),
             friendsList: {
-                accepted: friendsAccepted,
+                accepted: accepted,
                 pending: friendsPending
             },
             isRequestSend: Boolean(await FriendsService.hasSentRequest(theUser, user)),
@@ -50,8 +47,7 @@ router.get('/:username/:limit',authMdw ,async function(req, res)  {
             isFriend: ((await FriendsService.isFriendWith(theUser, user)).length > 0) ? true: false,
         })
     } catch(e) {
-        console.log(e)
-        res.status(404).send({})
+        res.status(404).send({error : e.message})
     }
 })
 
