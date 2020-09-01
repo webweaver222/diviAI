@@ -1,13 +1,6 @@
-class test {
+console.log(Math.floor(5 / 10));
 
+const b = { alex: " f" };
 
- alef() {
-    console.log(this)
-  }
-
-
-}
-
-
-const b = new test()
-b.alef()
+const a = [3, 4, 1];
+console.log(Math.min(...a));
