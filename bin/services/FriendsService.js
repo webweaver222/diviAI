@@ -8,10 +8,20 @@ module.exports = {
     });
   },
 
+  getPair: function(user, friend) {
+    return Friends.find({
+      $or: [
+        { $and: [{ user_id: user._id }, { friend_id: friend._id }] },
+
+        { $and: [{ user_id: friend._id }, { friend_id: user._id }] }
+      ]
+    });
+  },
+
   acceptFriendRequest: function(user, friend) {
     return this.friendRequestsPending(user).updateOne(
       { user_id: friend._id },
-      { $set: { accepted: true } }
+      { $set: { accepted: true, timestamp: new Date() } }
     );
   },
 
@@ -61,9 +71,8 @@ module.exports = {
 
   //check if you are friends with specific user (!!!check array length AFTER await!!!)
   isFriendWith: function(user, friend) {
-    return this.friends(user)
-      .match({ friend_id: friend._id })
-      .count("count");
+    return this.friends(user).match({ _id: friend._id });
+    //.count("count");
   },
 
   //find list of friends
@@ -78,6 +87,7 @@ module.exports = {
       {
         $project: {
           _id: 0,
+          timestamp: 1,
           friend_id: {
             $cond: {
               if: { $ne: ["$user_id", user._id] },
@@ -109,7 +119,7 @@ module.exports = {
           avatarUrl: "$friend_id.avatarUrl",
           username: "$friend_id.username",
           email: "$friend_id.email",
-          timestamp: "$friend_id.timestamp",
+          befriended: "$timestamp",
           _id: "$friend_id._id"
         }
       }

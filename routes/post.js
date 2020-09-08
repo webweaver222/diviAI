@@ -3,34 +3,38 @@ const router = express.Router();
 const authMdw = require("../bin/middleware/authMdw");
 const io = require("../bin/www").io;
 const PostService = require("../bin/services/PostService");
+const UserService = require("../bin/services/UserService");
 
 const processPost = async function(req, res) {
   if (req.body.post === "") return res.end();
   const postBody = req.body.post;
   const parentPostId = req.body.parent_id ? req.body.parent_id : null;
   const user = req.user;
+  let parentPost;
 
   if (parentPostId) {
-    const parentPost = await PostService.findById(parentPostId);
+    parentPost = await PostService.findById(parentPostId);
+    parentPost = await UserService.getUser(parentPost);
+
     if (!parentPost) return res.status(400).send("cant find that post");
   }
 
   const post = PostService.createPost({
     body: postBody,
     user: user._id,
-    parent: parentPostId
+    parent: parentPost
   });
 
   try {
     await post.save();
 
-    if (parentPostId) {
+    /*if (parentPostId) {
       const io = req.app.get("socketio");
 
       io.sockets.in(parentPost.user.username).emit("test", { msg: "hello" });
-    }
+    }*/
 
-    return res.send(post);
+    res.send(post);
   } catch (e) {
     return res.status(500).send(e);
   }

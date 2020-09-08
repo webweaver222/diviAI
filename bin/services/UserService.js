@@ -12,6 +12,12 @@ module.exports = {
     return User.findById(id, projection);
   },
 
+  getUser: function(post) {
+    return post
+      .populate("user", { _id: 1, username: 1, avatarUrl: 1, timestamp: 1 })
+      .execPopulate();
+  },
+
   findByName: function(name, projection = null) {
     return User.findOne({ username: name }, projection);
   },

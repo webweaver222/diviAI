@@ -21,7 +21,7 @@ router.get("/:username", authMdw, async function(req, res) {
 
     const pending = await FriendsService.friendRequestsPending(user);
 
-    user = await PostService.getPosts(user);
+    //user = await PostService.getPosts(user);
 
     const friendsPending = await Promise.all(
       pending.map(async relation => {
@@ -29,9 +29,18 @@ router.get("/:username", authMdw, async function(req, res) {
       })
     );
 
+    const posts = await PostService.getTimeline(user, accepted);
+
+    await Promise.all(
+      posts.map(async post => {
+        post.rep = await PostService.getReplys(post);
+        return post;
+      })
+    );
+
     res.send({
-      user: user,
-      posts: await PostService.getAllPosts(user, accepted),
+      user,
+      posts,
       friendsList: {
         accepted: accepted,
         pending: friendsPending

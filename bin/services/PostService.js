@@ -1,4 +1,5 @@
 const Post = require("../models/Post");
+const FriendsService = require("./FriendsService");
 
 module.exports = {
   createPost: function(data) {
@@ -16,7 +17,86 @@ module.exports = {
   getPosts: function(user) {
     return user.populate("posts").execPopulate();
   },
-  getAllPosts: function(user, friendsAccepted, limit) {
+
+  getReplys: function(post) {
+    return Post.aggregate([
+      {
+        $match: {
+          parent: post._id
+        }
+      }
+    ]);
+  },
+
+  getTimeline: function(user, friendsAccepted) {
+    return Post.aggregate([
+      {
+        $match: {
+          $or: [
+            { user: user._id },
+            {
+              user: {
+                $in: friendsAccepted.map(friend => friend._id)
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user"
+        }
+      },
+      { $unwind: "$user" },
+      {
+        $addFields: {
+          isStarted: {
+            $filter: {
+              input: friendsAccepted,
+              as: "friend",
+              cond: { $eq: ["$$friend._id", "$user._id"] }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          isStarted: {
+            $cond: [
+              { $gt: [{ $size: "$isStarted" }, 0] },
+              "$isStarted.befriended",
+              [null]
+            ]
+          },
+          body: 1,
+          user: 1,
+          timestamp: 1,
+          parent: 1
+        }
+      },
+      { $unwind: "$isStarted" },
+      {
+        $match: {
+          $or: [
+            {
+              "user._id": user._id
+            },
+            {
+              $expr: {
+                $gte: ["$timestamp", "$isStarted"]
+              }
+            }
+          ]
+        }
+      },
+      { $sort: { timestamp: -1 } }
+    ]);
+  },
+
+  getAllPosts: function(user, friendsAccepted) {
     return Post.aggregate([
       {
         $match: {
