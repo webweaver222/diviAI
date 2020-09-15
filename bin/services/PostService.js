@@ -12,7 +12,7 @@ module.exports = {
     return Post.deleteMany(match);
   },
   deleteById: function(id) {
-    return Post.deleteOne({ _id: id });
+    return Post.findOneAndDelete({ _id: id });
   },
   getPosts: function(user) {
     return user.populate("posts").execPopulate();
@@ -24,7 +24,17 @@ module.exports = {
         $match: {
           parent: post._id
         }
-      }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user"
+        }
+      },
+      { $unwind: "$user" },
+      { $sort: { timestamp: -1 } }
     ]);
   },
 

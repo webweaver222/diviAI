@@ -61,8 +61,8 @@ router.post("/delete", authMdw, async (req, res) => {
 
   await PostService.deleteAll({ parent: post_id });
 
-  await PostService.deleteById(post_id);
-  return res.end();
+  const post = await PostService.deleteById(post_id);
+  return res.send(post);
 });
 
 module.exports = router;
