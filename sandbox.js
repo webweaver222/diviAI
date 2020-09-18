@@ -1,29 +1,13 @@
-const arr = [2, -1, 4, -44, 0, 12, 1, 1, 0, 45];
+const arr = [6, 4, 0, 2];
 
-const pivot = (arr, start = 0, end = arr.length - 1) => {
-  let pivot = arr[start];
-  let swapIdx = start;
+const rarr = arr => {
+  if (arr.length === 0) return null;
 
-  for (let i = start + 1; i < arr.length; i++) {
-    if (pivot > arr[i]) {
-      swapIdx++;
-      [arr[swapIdx], arr[i]] = [arr[i], arr[swapIdx]];
-    }
-  }
+  const rnd = Math.floor(Math.random() * arr.length);
 
-  [arr[start], arr[swapIdx]] = [arr[swapIdx], arr[start]];
+  console.log(arr[rnd]);
 
-  return swapIdx;
+  return rarr([...arr.slice(0, rnd), ...arr.slice(rnd + 1)]);
 };
 
-const quickSort = (arr, left = 0, right = arr.length - 1) => {
-  if (left < right) {
-    const pivotIdx = pivot(arr, left, right);
-    quickSort(arr, left, pivotIdx - 1);
-    quickSort(arr, pivotIdx + 1, right);
-  }
-
-  return arr;
-};
-
-console.log(quickSort(arr));
+console.log(rarr(arr));

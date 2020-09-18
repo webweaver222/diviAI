@@ -48,11 +48,13 @@ router.post("/edit", authMdw, async (req, res) => {
   const { text, post_id } = req.body;
   if (text === "" || text === null) return res.end();
 
-  const post = await PostService.findById(post_id);
-
-  await post.update({ body: text });
-
-  return res.status(200).end();
+  try {
+    const updated = await PostService.update({ _id: post_id }, { body: text });
+    console.log(updated);
+    return res.status(200).send(updated);
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 router.post("/delete", authMdw, async (req, res) => {

@@ -11,6 +11,9 @@ module.exports = {
   deleteAll: function(match) {
     return Post.deleteMany(match);
   },
+  update: function(query, update) {
+    return Post.findOneAndUpdate(query, update, { new: true });
+  },
   deleteById: function(id) {
     return Post.findOneAndDelete({ _id: id });
   },

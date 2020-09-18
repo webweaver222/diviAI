@@ -1,15 +1,18 @@
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require("cloudinary").v2;
+const {
+  cloud_name,
+  api_key,
+  api_secret
+} = require("../../config.json").cloudinary;
 
+module.exports = function() {
+  cloudinary.config({
+    cloud_name,
+    api_key,
+    api_secret
+  });
 
-module.exports = function () {
-    cloudinary.config({ 
-        cloud_name: 'dzcljuelk', 
-        api_key: '271565619181855', 
-        api_secret: 'HeUSRI-WoEDKuulck4d7KfV4tno' 
-      });
-
-    this.save = function(base64) {
-        return cloudinary.uploader.upload(base64)
-    }
-}
-
+  this.save = function(base64) {
+    return cloudinary.uploader.upload(base64);
+  };
+};
