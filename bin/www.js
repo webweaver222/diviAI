@@ -12,7 +12,7 @@ var http = require("http");
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || "3000");
+var port = normalizePort(process.env.PORT || "3001");
 app.set("port", port);
 
 /**
@@ -27,8 +27,8 @@ server.on("listening", onListening);
 
 var io = require("socket.io")(server);
 
-io.sockets.on("connection", function(socket) {
-  socket.on("join", function(data) {
+io.sockets.on("connection", function (socket) {
+  socket.on("join", function (data) {
     socket.join(data.username); // We are using room of socket io
     console.log(`${data.username} connected`);
   });
