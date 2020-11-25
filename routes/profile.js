@@ -9,7 +9,7 @@ const authMdw = require("../bin/middleware/authMdw");
 
 //get user page
 
-router.get("/:username", authMdw, async function(req, res) {
+router.get("/:username", authMdw, async function (req, res) {
   const { username } = req.params;
 
   const theUser = req.user;
@@ -22,7 +22,7 @@ router.get("/:username", authMdw, async function(req, res) {
     const pending = await FriendsService.friendRequestsPending(user);
 
     const friendsPending = await Promise.all(
-      pending.map(async relation => {
+      pending.map(async (relation) => {
         return await UserService.findById(relation.user_id);
       })
     );
@@ -31,7 +31,7 @@ router.get("/:username", authMdw, async function(req, res) {
 
     try {
       await Promise.all(
-        posts.map(async post => {
+        posts.map(async (post) => {
           const replies = await PostService.getReplys(post);
           post.rep = replies;
           return post;
@@ -46,7 +46,7 @@ router.get("/:username", authMdw, async function(req, res) {
       posts,
       friendsList: {
         accepted: accepted,
-        pending: friendsPending
+        pending: friendsPending,
       },
       isRequestSend: Boolean(
         await FriendsService.hasSentRequest(theUser, user)
@@ -57,7 +57,7 @@ router.get("/:username", authMdw, async function(req, res) {
       isFriend:
         (await FriendsService.isFriendWith(theUser, user)).length > 0
           ? true
-          : false
+          : false,
     });
   } catch (e) {
     res.status(404).send({ error: e.message });
@@ -69,15 +69,15 @@ router.post("/edit", authMdw, async (req, res) => {
 
   const updatesArr = Object.keys(updates);
 
-  if (updatesArr.some(el => updates[el] !== user[el])) {
-    updatesArr.forEach(prop => {
+  if (updatesArr.some((el) => updates[el] !== user[el])) {
+    updatesArr.forEach((prop) => {
       user[prop] = updates[prop];
     });
 
     await user.save();
     return res.status(200).send({
       user: user,
-      msg: "Profile successfully updated"
+      msg: "Profile successfully updated",
     });
   }
 
@@ -94,8 +94,11 @@ router.post("/avatar", authMdw, async (req, res) => {
     user.avatarUrl = avatar.url;
     await user.save();
     return res.status(200).send({
-      user: user,
-      msg: "Avatar successfully updated"
+      url: avatar.url,
+      size: {
+        width: avatar.width,
+        height: avatar.height,
+      },
     });
   } catch (e) {
     console.log("Error:", e);
