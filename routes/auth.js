@@ -23,6 +23,7 @@ router.post("/signup", validate, async function(req, res) {
 
 //login
 router.post("/signin", validate, async function(req, res) {
+  console.log(req);
   try {
     const user = await UserService.findByCred(
       req.body.email,

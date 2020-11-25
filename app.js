@@ -7,10 +7,10 @@ const cors = require("cors");
 
 //db connect
 
-mongoose.connect("mongodb://127.0.0.1:27017/diviai_db", {
+mongoose.connect("mongodb://localhost:27017/diviai_db", {
   useNewUrlParser: true,
   useCreateIndex: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 });
 
 var indexRouter = require("./routes/index");
@@ -25,7 +25,7 @@ var app = express();
 var corsOptions = {
   origin: "http://localhost:8000",
   optionsSuccessStatus: 200,
-  credentials: true // some legacy browsers (IE11, various SmartTVs) choke on 204
+  credentials: true, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
 app.use(cors(corsOptions));
@@ -44,12 +44,12 @@ app.use("/post", postRouter);
 app.use("/testData", fakerRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   console.log(err);
   // set locals, only providing error in development
   res.locals.message = err.message;

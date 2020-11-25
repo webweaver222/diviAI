@@ -11,7 +11,7 @@ const authMdw = require("../bin/middleware/authMdw");
 
 router.get("/:username", authMdw, async function(req, res) {
   const { username } = req.params;
-
+  console.log(req.params);
   const theUser = req.user;
 
   try {
