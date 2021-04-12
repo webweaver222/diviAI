@@ -1,63 +1,17 @@
-#!/usr/bin/env node
-
-/**
- * Module dependencies.
- */
-
 var app = require("../app");
 var debug = require("debug")("diviai:server");
 var http = require("http");
-
-/**
- * Get port from environment and store in Express.
- */
-
-var port = normalizePort(process.env.PORT || "3000");
-app.set("port", port);
-
-/**
- * Create HTTP server.
- */
+const WebSocket = require("ws");
 
 var server = http.createServer(app);
 
-server.listen(port);
+server.listen(process.env.PORT || "3000");
 server.on("error", onError);
 server.on("listening", onListening);
 
-var io = require("socket.io")(server);
+const wss = new WebSocket.Server({ server });
 
-io.sockets.on("connection", function(socket) {
-  socket.on("join", function(data) {
-    socket.join(data.username); // We are using room of socket io
-    console.log(`${data.username} connected`);
-  });
-});
-
-app.set("socketio", io);
-/**
- * Normalize a port into a number, string, or false.
- */
-
-function normalizePort(val) {
-  var port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-}
-
-/**
- * Event listener for HTTP server "error" event.
- */
+require("./events")(wss);
 
 function onError(error) {
   if (error.syscall !== "listen") {
@@ -80,10 +34,6 @@ function onError(error) {
       throw error;
   }
 }
-
-/**
- * Event listener for HTTP server "listening" event.
- */
 
 function onListening() {
   var addr = server.address();

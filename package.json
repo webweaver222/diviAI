@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "concurrently \"nodemon ./bin/www --js,hbs\"   \"sass --watch public/main.sass:public/stylesheets/style.css\"",
+    "dev": "nodemon ./bin/www --js",
     "debug": "concurrently \"nodemon --inspect ./bin/www --js,hbs\"   \"sass --watch public/main.sass:public/stylesheets/style.css\"",
     "dbconn": "cd C:/Users/green/mongodb/bin && mongod.exe --port 27017 --dbpath C:/Users/green/mongodb-data "
   },
@@ -16,16 +16,14 @@
     "cors": "^2.8.5",
     "debug": "~2.6.9",
     "express": "~4.16.1",
-    "express-session": "^1.17.0",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.8.10",
     "morgan": "~1.9.1",
     "node-telegram-bot-api": "^0.40.0",
     "nodemon": "^2.0.2",
-    "sass": "^1.25.0",
     "session-file-store": "^1.4.0",
-    "socket.io": "^2.3.0",
-    "validator": "^13.0.0"
+    "validator": "^13.0.0",
+    "ws": "^7.4.4"
   }
 }

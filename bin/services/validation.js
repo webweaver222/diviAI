@@ -1,44 +1,38 @@
-const validator = require('validator')
-
+const validator = require("validator");
+const UserService = require("./UserService");
 
 const v = {
+  errors: {},
 
-    errors : {},
+  validateSignIn: async function (userData) {
+    this.errors = {};
 
-    validateSignIn: async function (userData) {
+    /*validation rules for signup and singin */
+    if (!validator.isEmail(userData.email)) {
+      this.errors["email"] = [];
+      this.errors["email"].push("Email is not valid");
+    }
 
-        this.errors = {}
+    if (validator.isEmpty(userData.email)) {
+      if (!this.errors.hasOwnProperty("email")) this.errors["email"] = [];
+      this.errors["email"].push("Empty Email");
+    }
 
-        /*validation rules for signup and singin */
-        if (!validator.isEmail(userData.email)) {
-            this.errors['email'] = []
-            this.errors['email'].push('Email is not valid')
-        }
+    if (validator.isEmpty(userData.password)) {
+      this.errors["password"] = [];
+      this.errors["password"].push("No password provided");
+    }
+  },
 
-        if (validator.isEmpty(userData.email)) {
-            if (!this.errors.hasOwnProperty('email'))  this.errors['email'] = []
-            this.errors['email'].push('Empty Email')
-        }
+  validateSignUp: async function (userData) {
+    this.validateSignIn(userData);
 
-        if(validator.isEmpty(userData.password)) {
-            this.errors['password'] = []
-            this.errors['password'].push('No password provided')
-        }
-        
-    },
+    if (validator.isEmpty(userData.username)) {
+      this.errors["username"] = [];
+      this.errors["username"].push("No username provided");
+    }
 
-    validateSignUp: async function (userData) {
-
-        const UserService = require('./UserService')
-
-        this.validateSignIn(userData)
-
-        if (validator.isEmpty(userData.username)) {
-            this.errors['username'] = []
-            this.errors['username'].push('No username provided')
-        }
-
-        /*if (validator.isEmpty(userData.repass)) {
+    /*if (validator.isEmpty(userData.repass)) {
             this.errors['repass'] = []
             this.errors['repass'].push('No password provided')
         }
@@ -48,18 +42,15 @@ const v = {
             this.errors['repass'].push('Passwords do not match')
         }*/
 
-        try {
-            const user = await UserService.findByEmail(userData.email)
+    try {
+      const user = await UserService.findByEmail(userData.email);
 
-            if (user) {
-                if (!this.errors.hasOwnProperty('email')) this.errors['email'] = []
-                this.errors['email'].push('That email is already exist')
-            }
-        } catch { }
-    }
+      if (user) {
+        if (!this.errors.hasOwnProperty("email")) this.errors["email"] = [];
+        this.errors["email"].push("That email is already exist");
+      }
+    } catch {}
+  },
+};
 
-    
-}
-
-
-module.exports = v
+module.exports = v;
