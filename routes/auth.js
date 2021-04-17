@@ -49,6 +49,7 @@ router.post("/logout", authMdw, async function (req, res) {
 
     res.clearCookie("user").end();
   } catch (e) {
+    console.log(e);
     res.status(500).send({ msg: e });
   }
 });

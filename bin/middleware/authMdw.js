@@ -1,9 +1,9 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
-const findUser = async (token) => {
+const findUser = (token) => {
   const decoded = jwt.verify(token, "omaha222");
-  const user = await User.findOne({
+  const user = User.findOne({
     _id: decoded._id,
     "tokens.token": token,
   });
@@ -11,12 +11,12 @@ const findUser = async (token) => {
   return user;
 };
 
-const auth = function (req, res, next) {
+const auth = async function (req, res, next) {
   const token = req.headers.token;
 
   //check if token form user is valid
   try {
-    const user = findUser(token);
+    const user = await findUser(token);
 
     if (!user) throw new Error("orgon");
 

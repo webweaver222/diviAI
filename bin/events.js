@@ -1,25 +1,21 @@
-var url = require("url");
-const jwt = require("jsonwebtoken");
-const User = require("./models/User");
+const url = require("url");
+const { findUser } = require("./middleware/authMdw");
+const UserSocket = require("./services/UserSocketMap");
 
 module.exports = function (wss) {
   wss.on("connection", async function connection(ws, request) {
     const token = url.parse(request.url, true).query.token;
 
-    const decoded = jwt.verify(token, "omaha222");
-    const user = await User.findOne({
-      _id: decoded._id,
-      "tokens.token": token,
-    });
+    const user = await findUser(token);
 
-    console.log(user);
+    if (user) UserSocket.set(String(user._id), ws);
 
     ws.on("message", function incoming(message) {
       console.log("received: %s", message);
     });
 
     ws.on("close", function close() {
-      console.log("klose");
+      UserSocket.delete(String(user._id));
     });
   });
 };

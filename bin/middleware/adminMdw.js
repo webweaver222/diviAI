@@ -1,15 +1,13 @@
+const admin = async function (req, res, next) {
+  const { user } = req;
 
-const admin = async function(req,res,next) {
+  if (user.email === "") {
+    return next();
+  }
 
-    const {user} = req
+  console.log("Please log in as admin");
 
-    if (user.email === 'fukiry@gmail.com') {
-        return next()
-    }
+  return res.status(401).send({ error: "Please log in as admin" });
+};
 
-    console.log('Please log in as admin')
-
-    return res.status(401).send({error:'Please log in as admin'})
-}
-
-module.exports = admin
+module.exports = admin;

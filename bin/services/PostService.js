@@ -1,47 +1,46 @@
 const Post = require("../models/Post");
-const FriendsService = require("./FriendsService");
 
 module.exports = {
-  createPost: function(data) {
+  createPost: function (data) {
     return new Post(data);
   },
-  findById: function(id) {
+  findById: function (id) {
     return Post.findById(id);
   },
-  deleteAll: function(match) {
+  deleteAll: function (match) {
     return Post.deleteMany(match);
   },
-  update: function(query, update) {
+  update: function (query, update) {
     return Post.findOneAndUpdate(query, update, { new: true });
   },
-  deleteById: function(id) {
+  deleteById: function (id) {
     return Post.findOneAndDelete({ _id: id });
   },
-  getPosts: function(user) {
+  getPosts: function (user) {
     return user.populate("posts").execPopulate();
   },
 
-  getReplys: function(post) {
+  getReplys: function (post) {
     return Post.aggregate([
       {
         $match: {
-          parent: post._id
-        }
+          parent: post._id,
+        },
       },
       {
         $lookup: {
           from: "users",
           localField: "user",
           foreignField: "_id",
-          as: "user"
-        }
+          as: "user",
+        },
       },
       { $unwind: "$user" },
-      { $sort: { timestamp: -1 } }
+      { $sort: { timestamp: -1 } },
     ]);
   },
 
-  getTimeline: function(user, friendsAccepted) {
+  getTimeline: function (user, friendsAccepted) {
     return Post.aggregate([
       {
         $match: {
@@ -49,19 +48,19 @@ module.exports = {
             { user: user._id },
             {
               user: {
-                $in: friendsAccepted.map(friend => friend._id)
-              }
-            }
-          ]
-        }
+                $in: friendsAccepted.map((friend) => friend._id),
+              },
+            },
+          ],
+        },
       },
       {
         $lookup: {
           from: "users",
           localField: "user",
           foreignField: "_id",
-          as: "user"
-        }
+          as: "user",
+        },
       },
       { $unwind: "$user" },
       {
@@ -70,10 +69,10 @@ module.exports = {
             $filter: {
               input: friendsAccepted,
               as: "friend",
-              cond: { $eq: ["$$friend._id", "$user._id"] }
-            }
-          }
-        }
+              cond: { $eq: ["$$friend._id", "$user._id"] },
+            },
+          },
+        },
       },
       {
         $project: {
@@ -81,35 +80,35 @@ module.exports = {
             $cond: [
               { $gt: [{ $size: "$isStarted" }, 0] },
               "$isStarted.befriended",
-              [null]
-            ]
+              [null],
+            ],
           },
           body: 1,
           user: 1,
           timestamp: 1,
-          parent: 1
-        }
+          parent: 1,
+        },
       },
       { $unwind: "$isStarted" },
       {
         $match: {
           $or: [
             {
-              "user._id": user._id
+              "user._id": user._id,
             },
             {
               $expr: {
-                $gte: ["$timestamp", "$isStarted"]
-              }
-            }
-          ]
-        }
+                $gte: ["$timestamp", "$isStarted"],
+              },
+            },
+          ],
+        },
       },
-      { $sort: { timestamp: -1 } }
+      { $sort: { timestamp: -1 } },
     ]);
   },
 
-  getAllPosts: function(user, friendsAccepted) {
+  getAllPosts: function (user, friendsAccepted) {
     return Post.aggregate([
       {
         $match: {
@@ -117,11 +116,11 @@ module.exports = {
             { user: user._id },
             {
               user: {
-                $in: friendsAccepted.map(friend => friend._id)
-              }
-            }
-          ]
-        }
+                $in: friendsAccepted.map((friend) => friend._id),
+              },
+            },
+          ],
+        },
       },
       { $sort: { timestamp: -1 } },
       {
@@ -129,8 +128,8 @@ module.exports = {
           from: "users",
           localField: "user",
           foreignField: "_id",
-          as: "user"
-        }
+          as: "user",
+        },
       },
       { $unwind: "$user" },
       {
@@ -138,34 +137,34 @@ module.exports = {
           from: "posts",
           localField: "parent",
           foreignField: "_id",
-          as: "parent"
-        }
+          as: "parent",
+        },
       },
       {
         $unwind: {
           path: "$parent",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: "users",
           localField: "parent.user",
           foreignField: "_id",
-          as: "parent.user"
-        }
+          as: "parent.user",
+        },
       },
       {
         $unwind: {
           path: "$parent.user",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
           "user.tokens": 0,
-          "user.password ": 0
-        }
+          "user.password ": 0,
+        },
       },
       {
         $project: {
@@ -173,11 +172,11 @@ module.exports = {
           user: 1,
           timestamp: 1,
           parent: {
-            $cond: [{ $eq: ["$parent", {}] }, null, "$parent"]
-          }
-        }
-      }
+            $cond: [{ $eq: ["$parent", {}] }, null, "$parent"],
+          },
+        },
+      },
       //{$limit: Number(limit)}
     ]);
-  }
+  },
 };

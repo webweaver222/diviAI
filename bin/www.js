@@ -1,6 +1,6 @@
-var app = require("../app");
-var debug = require("debug")("diviai:server");
-var http = require("http");
+const app = require("../app");
+const debug = require("debug")("diviai:server");
+const http = require("http");
 const WebSocket = require("ws");
 
 var server = http.createServer(app);

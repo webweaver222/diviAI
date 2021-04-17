@@ -2,40 +2,27 @@ const express = require("express");
 const router = express.Router();
 const authMdw = require("../bin/middleware/authMdw").auth;
 const PostService = require("../bin/services/PostService");
-const UserService = require("../bin/services/UserService");
+const {
+  validPost,
+  processPost,
+  notifyFriends,
+  getParentPost,
+  notifyParent,
+} = require("../bin/middleware/postMdw");
 
-const processPost = async function (req, res) {
-  if (req.body.post === "") return res.end();
-  const postBody = req.body.post;
-  const parentPostId = req.body.parent_id ? req.body.parent_id : null;
-  const user = req.user;
-  let parentPost;
+const finishPost = (req, res) => res.send(req.post);
 
-  if (parentPostId) {
-    parentPost = await PostService.findById(parentPostId);
-    parentPost = await UserService.getUser(parentPost);
+router.post("/", authMdw, validPost, processPost, notifyFriends, finishPost);
 
-    if (!parentPost) return res.status(400).send("cant find that post");
-  }
-
-  const post = PostService.createPost({
-    body: postBody,
-    user: user._id,
-    parent: parentPost,
-  });
-
-  try {
-    await post.save();
-
-    res.send(post);
-  } catch (e) {
-    return res.status(500).send(e);
-  }
-};
-
-router.post("/", authMdw, processPost);
-
-router.post("/reply", authMdw, processPost);
+router.post(
+  "/reply",
+  authMdw,
+  validPost,
+  getParentPost,
+  processPost,
+  notifyParent,
+  finishPost
+);
 
 router.post("/edit", authMdw, async (req, res) => {
   const { text, post_id } = req.body;
