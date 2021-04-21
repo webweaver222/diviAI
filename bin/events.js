@@ -8,13 +8,18 @@ module.exports = function (wss) {
 
     const user = await findUser(token);
 
+    console.log(user.username, "just connected");
+
     if (user) UserSocket.set(String(user._id), ws);
+
+    console.log(UserSocket.size);
 
     ws.on("message", function incoming(message) {
       console.log("received: %s", message);
     });
 
     ws.on("close", function close() {
+      console.log(user.username, "just disconnected");
       UserSocket.delete(String(user._id));
     });
   });

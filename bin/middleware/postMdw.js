@@ -6,7 +6,7 @@ const PostService = require("../services/PostService");
 const notifyParent = async (req, res, next) => {
   const { user, post, parent } = req;
 
-  const ws = UserSocketMap.get(String(parent._id));
+  const ws = UserSocketMap.get(String(parent.user._id));
 
   if (ws)
     ws.send(
@@ -22,7 +22,7 @@ const notifyParent = async (req, res, next) => {
   next();
 };
 
-const notifyFriends = async (req, res, next) => {
+const notifyFriends = (notifFunction) => async (req, res, next) => {
   const { user, post } = req;
 
   const friends = await FriendsService.friends(user);
@@ -30,20 +30,34 @@ const notifyFriends = async (req, res, next) => {
   friends.forEach((friend) => {
     const ws = UserSocketMap.get(String(friend._id));
 
-    if (ws)
-      ws.send(
-        JSON.stringify({
-          type: "FRIEND_POST",
-          payload: {
-            user,
-            post,
-          },
-        })
-      );
+    if (ws) notifFunction(ws, user, post);
   });
 
   next();
 };
+
+const notifyFriendsAboutPost = notifyFriends((ws, user, post) =>
+  ws.send(
+    JSON.stringify({
+      type: "FRIEND_POST",
+      payload: {
+        user,
+        post,
+      },
+    })
+  )
+);
+
+const notifyFriendsAboutDelete = notifyFriends((ws, user, post) =>
+  ws.send(
+    JSON.stringify({
+      type: "FRIEND_POST_DELETE",
+      payload: {
+        post,
+      },
+    })
+  )
+);
 
 const processPost = async function (req, res, next) {
   const {
@@ -92,10 +106,29 @@ const validPost = (req, res, next) => {
   return next();
 };
 
+const deletePost = async (req, res, next) => {
+  const { post_id } = req.body;
+  if (!post_id) return res.end();
+
+  try {
+    await PostService.deleteAll({ parent: post_id });
+
+    const post = await PostService.deleteById(post_id);
+
+    req.post = post;
+
+    next();
+  } catch (e) {
+    return res.status(500).send(e);
+  }
+};
+
 module.exports = {
   validPost,
   getParentPost,
   processPost,
-  notifyFriends,
+  deletePost,
+  notifyFriendsAboutPost,
+  notifyFriendsAboutDelete,
   notifyParent,
 };

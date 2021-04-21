@@ -1,56 +1,45 @@
 var express = require("express");
 var router = express.Router();
-const UserService = require("../bin/services/UserService");
+const Auth = require("../bin/services/AuthService");
 const authMdw = require("../bin/middleware/authMdw").auth;
 const validate = require("../bin/middleware/valid");
 
 router.post("/signup", validate, async function (req, res) {
-  let user = UserService.createUser(req.body);
-
-  //register new user
   try {
-    user = await user.save();
+    const {
+      user: { username, email, avatarUrl },
+      token,
+    } = await Auth.signup(req.body);
 
-    const { username, email, avatarUrl } = user;
-
-    const token = await UserService.generateAuthToken(user);
     return res
       .status(200)
       .send({ user: { username, email, avatarUrl, token } });
   } catch (e) {
-    console.log(e, "dork");
-    return res.send({ message: e.message });
+    console.log(e, "signup error");
+    res.status(500).send(e.message);
   }
 });
 
 //login
 router.post("/signin", validate, async function (req, res) {
   try {
-    const user = await UserService.findByCred(
-      req.body.email,
-      req.body.password
-    );
-    const { username, email, avatarUrl } = user;
+    const { username, email, avatarUrl, token } = await Auth.signin(req.body);
 
-    const token = await UserService.generateAuthToken(user);
     res.status(200).send({ user: { username, email, avatarUrl, token } });
   } catch (e) {
-    console.log(e);
-    res.status(401).send(e.message);
+    console.log(e, "signin error");
+    res.status(500).send(e.message);
   }
 });
 
 router.post("/logout", authMdw, async function (req, res) {
   try {
-    req.user.tokens = req.user.tokens.filter((token) => {
-      return token.token != req.token;
-    });
-    await req.user.save();
+    await Auth.logout(req.user, req.token);
 
     res.clearCookie("user").end();
   } catch (e) {
-    console.log(e);
-    res.status(500).send({ msg: e });
+    console.log(e, "logout error");
+    res.status(500).send(e.message);
   }
 });
 

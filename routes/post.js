@@ -5,14 +5,23 @@ const PostService = require("../bin/services/PostService");
 const {
   validPost,
   processPost,
-  notifyFriends,
+  deletePost,
+  notifyFriendsAboutPost,
+  notifyFriendsAboutDelete,
   getParentPost,
   notifyParent,
 } = require("../bin/middleware/postMdw");
 
 const finishPost = (req, res) => res.send(req.post);
 
-router.post("/", authMdw, validPost, processPost, notifyFriends, finishPost);
+router.post(
+  "/",
+  authMdw,
+  validPost,
+  processPost,
+  notifyFriendsAboutPost,
+  finishPost
+);
 
 router.post(
   "/reply",
@@ -37,14 +46,12 @@ router.post("/edit", authMdw, async (req, res) => {
   }
 });
 
-router.post("/delete", authMdw, async (req, res) => {
-  const { post_id } = req.body;
-  if (post_id == null) return res.end();
-
-  await PostService.deleteAll({ parent: post_id });
-
-  const post = await PostService.deleteById(post_id);
-  return res.send(post);
-});
+router.post(
+  "/delete",
+  authMdw,
+  deletePost,
+  notifyFriendsAboutDelete,
+  finishPost
+);
 
 module.exports = router;
