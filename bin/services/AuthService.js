@@ -1,4 +1,5 @@
-const UserService = require("./UserService");
+const UserMapper = require("../dataAccess/UserMapper");
+const jwt = require("jsonwebtoken");
 
 class Auth {
   async signup(cred) {
@@ -6,7 +7,7 @@ class Auth {
 
     user = await user.save();
 
-    const token = await UserService.generateAuthToken(user);
+    const token = await this.generateAuthToken(user);
 
     return {
       user,
@@ -15,11 +16,11 @@ class Auth {
   }
 
   async signin(cred) {
-    const user = await UserService.findByCred(cred.email, cred.password);
+    const user = await UserMapper.findByCred(cred.email, cred.password);
 
     const { username, email, avatarUrl } = user;
 
-    const token = await UserService.generateAuthToken(user);
+    const token = await this.generateAuthToken(user);
 
     return {
       username,
@@ -34,6 +35,13 @@ class Auth {
       return token.token != userToken;
     });
     return await user.save();
+  }
+
+  async generateAuthToken(user) {
+    const token = jwt.sign({ _id: user._id.toString() }, "omaha222");
+    user.tokens = user.tokens.concat({ token });
+    await user.save();
+    return token;
   }
 }
 

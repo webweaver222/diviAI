@@ -1,63 +1,26 @@
-const UserService = require("../services/UserService");
-const FriendsService = require("../services/FriendsService");
-const UserSocketMap = require("../services/UserSocketMap");
 const PostService = require("../services/PostService");
 
 const notifyParent = async (req, res, next) => {
   const { user, post, parent } = req;
 
-  const ws = UserSocketMap.get(String(parent.user._id));
-
-  if (ws)
-    ws.send(
-      JSON.stringify({
-        type: "FRIEND_REPLY",
-        payload: {
-          user,
-          post,
-        },
-      })
-    );
+  PostService.notifyParent(parent.user._id, user, post);
 
   next();
 };
 
-const notifyFriends = (notifFunction) => async (req, res, next) => {
+const notifyFriendsAboutPost = async (req, res, next) => {
   const { user, post } = req;
 
-  const friends = await FriendsService.friends(user);
-
-  friends.forEach((friend) => {
-    const ws = UserSocketMap.get(String(friend._id));
-
-    if (ws) notifFunction(ws, user, post);
-  });
-
+  PostService.notifyFriends(PostService.AboutPost)(user, post);
   next();
 };
 
-const notifyFriendsAboutPost = notifyFriends((ws, user, post) =>
-  ws.send(
-    JSON.stringify({
-      type: "FRIEND_POST",
-      payload: {
-        user,
-        post,
-      },
-    })
-  )
-);
+const notifyFriendsAboutDelete = async (req, res, next) => {
+  const { user, post } = req;
 
-const notifyFriendsAboutDelete = notifyFriends((ws, user, post) =>
-  ws.send(
-    JSON.stringify({
-      type: "FRIEND_POST_DELETE",
-      payload: {
-        post,
-      },
-    })
-  )
-);
+  PostService.notifyFriends(PostService.AboutDelete)(user, post);
+  next();
+};
 
 const processPost = async function (req, res, next) {
   const {
@@ -67,43 +30,31 @@ const processPost = async function (req, res, next) {
   } = req;
 
   try {
-    let post = PostService.createPost({
-      body: postBody,
-      user: user._id,
-      parent: parent,
-    });
-
-    await post.save();
-
-    post = post.toObject();
-    post.rep = [];
+    const post = await PostService.processPost(user, parent, postBody);
     req.post = post;
 
-    return next();
+    next();
   } catch (e) {
+    console.log(e);
     return res.status(500).send(e);
   }
 };
 
 const getParentPost = async (req, res, next) => {
   try {
-    const parentPost = await PostService.findById(req.body.parent_id);
-
-    const parent = await UserService.getUser(parentPost);
-
-    if (!parent) return res.status(400).send("cant find that post");
+    const parent = await PostService.getParentPost(req.body.parent_id);
 
     req.parent = parent;
 
-    return next();
+    next();
   } catch (e) {
     return res.status(500).send(e);
   }
 };
 
 const validPost = (req, res, next) => {
-  if (req.body.post === "") return res.end();
-  return next();
+  if (!PostService.validPost(req.body.post)) return res.end();
+  next();
 };
 
 const deletePost = async (req, res, next) => {
@@ -111,12 +62,24 @@ const deletePost = async (req, res, next) => {
   if (!post_id) return res.end();
 
   try {
-    await PostService.deleteAll({ parent: post_id });
-
-    const post = await PostService.deleteById(post_id);
+    const post = await PostService.deletePost(post_id);
 
     req.post = post;
 
+    next();
+  } catch (e) {
+    return res.status(500).send(e);
+  }
+};
+
+const editPost = async (req, res, next) => {
+  const { text, post_id } = req.body;
+  if (text === "") return res.end();
+
+  try {
+    const updated = await PostService.editPost(post_id, text);
+
+    req.post = updated;
     next();
   } catch (e) {
     return res.status(500).send(e);
@@ -128,6 +91,7 @@ module.exports = {
   getParentPost,
   processPost,
   deletePost,
+  editPost,
   notifyFriendsAboutPost,
   notifyFriendsAboutDelete,
   notifyParent,

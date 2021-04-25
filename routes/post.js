@@ -6,13 +6,14 @@ const {
   validPost,
   processPost,
   deletePost,
+  editPost,
   notifyFriendsAboutPost,
   notifyFriendsAboutDelete,
   getParentPost,
   notifyParent,
 } = require("../bin/middleware/postMdw");
 
-const finishPost = (req, res) => res.send(req.post);
+const finishPost = (req, res) => res.status(200).send(req.post);
 
 router.post(
   "/",
@@ -33,18 +34,7 @@ router.post(
   finishPost
 );
 
-router.post("/edit", authMdw, async (req, res) => {
-  const { text, post_id } = req.body;
-  if (text === "" || text === null) return res.end();
-
-  try {
-    const updated = await PostService.update({ _id: post_id }, { body: text });
-
-    return res.status(200).send(updated);
-  } catch (e) {
-    console.log(e);
-  }
-});
+router.post("/edit", authMdw, editPost, finishPost);
 
 router.post(
   "/delete",

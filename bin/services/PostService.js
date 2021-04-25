@@ -1,182 +1,99 @@
-const Post = require("../models/Post");
+const PostMapper = require("../dataAccess/PostMapper");
+const FriendsMapper = require("../dataAccess/FriendsMapper");
+const UserSocketMap = require("../services/UserSocketMap");
+const UserMapper = require("../dataAccess/UserMapper");
 
-module.exports = {
-  createPost: function (data) {
-    return new Post(data);
-  },
-  findById: function (id) {
-    return Post.findById(id);
-  },
-  deleteAll: function (match) {
-    return Post.deleteMany(match);
-  },
-  update: function (query, update) {
-    return Post.findOneAndUpdate(query, update, { new: true });
-  },
-  deleteById: function (id) {
-    return Post.findOneAndDelete({ _id: id });
-  },
-  getPosts: function (user) {
-    return user.populate("posts").execPopulate();
-  },
+class PostService {
+  validPost(post) {
+    if (post === "") return false;
+    return true;
+  }
 
-  getReplys: function (post) {
-    return Post.aggregate([
-      {
-        $match: {
-          parent: post._id,
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "user",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: "$user" },
-      { $sort: { timestamp: -1 } },
-    ]);
-  },
+  async processPost(user, parent, postBody) {
+    let post = PostMapper.createPost({
+      body: postBody,
+      user: user._id,
+      parent: parent,
+    });
 
-  getTimeline: function (user, friendsAccepted) {
-    return Post.aggregate([
-      {
-        $match: {
-          $or: [
-            { user: user._id },
-            {
-              user: {
-                $in: friendsAccepted.map((friend) => friend._id),
-              },
-            },
-          ],
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "user",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: "$user" },
-      {
-        $addFields: {
-          isStarted: {
-            $filter: {
-              input: friendsAccepted,
-              as: "friend",
-              cond: { $eq: ["$$friend._id", "$user._id"] },
-            },
+    await post.save();
+
+    post = post.toObject();
+    post.rep = [];
+    return post;
+  }
+
+  async deletePost(post_id) {
+    await PostMapper.deleteAll({ parent: post_id });
+
+    const post = await PostMapper.deleteById(post_id);
+
+    return post;
+  }
+
+  async editPost(_id, body) {
+    return await PostMapper.update({ _id }, { body });
+  }
+
+  async getParentPost(parent_id) {
+    const parentPost = await PostMapper.findById(parent_id);
+
+    const parent = await UserMapper.getUser(parentPost);
+
+    if (!parent) throw new Error("no such post found");
+
+    return parent;
+  }
+
+  notifyParent(parent_user_id, user, post) {
+    const ws = UserSocketMap.get(String(parent_user_id));
+
+    if (ws)
+      ws.send(
+        JSON.stringify({
+          type: "FRIEND_REPLY",
+          payload: {
+            user,
+            post,
           },
-        },
-      },
-      {
-        $project: {
-          isStarted: {
-            $cond: [
-              { $gt: [{ $size: "$isStarted" }, 0] },
-              "$isStarted.befriended",
-              [null],
-            ],
-          },
-          body: 1,
-          user: 1,
-          timestamp: 1,
-          parent: 1,
-        },
-      },
-      { $unwind: "$isStarted" },
-      {
-        $match: {
-          $or: [
-            {
-              "user._id": user._id,
-            },
-            {
-              $expr: {
-                $gte: ["$timestamp", "$isStarted"],
-              },
-            },
-          ],
-        },
-      },
-      { $sort: { timestamp: -1 } },
-    ]);
-  },
+        })
+      );
+  }
 
-  getAllPosts: function (user, friendsAccepted) {
-    return Post.aggregate([
-      {
-        $match: {
-          $or: [
-            { user: user._id },
-            {
-              user: {
-                $in: friendsAccepted.map((friend) => friend._id),
-              },
-            },
-          ],
+  notifyFriends(notifFunction) {
+    return async function (user, post) {
+      const friends = await FriendsMapper.friends(user);
+
+      friends.forEach((friend) => {
+        const ws = UserSocketMap.get(String(friend._id));
+
+        if (ws) notifFunction(ws, user, post);
+      });
+    };
+  }
+
+  AboutPost(ws, user, post) {
+    ws.send(
+      JSON.stringify({
+        type: "FRIEND_POST",
+        payload: {
+          user,
+          post,
         },
-      },
-      { $sort: { timestamp: -1 } },
-      {
-        $lookup: {
-          from: "users",
-          localField: "user",
-          foreignField: "_id",
-          as: "user",
+      })
+    );
+  }
+
+  AboutDelete(ws, user, post) {
+    ws.send(
+      JSON.stringify({
+        type: "FRIEND_POST_DELETE",
+        payload: {
+          post,
         },
-      },
-      { $unwind: "$user" },
-      {
-        $lookup: {
-          from: "posts",
-          localField: "parent",
-          foreignField: "_id",
-          as: "parent",
-        },
-      },
-      {
-        $unwind: {
-          path: "$parent",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "parent.user",
-          foreignField: "_id",
-          as: "parent.user",
-        },
-      },
-      {
-        $unwind: {
-          path: "$parent.user",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          "user.tokens": 0,
-          "user.password ": 0,
-        },
-      },
-      {
-        $project: {
-          body: 1,
-          user: 1,
-          timestamp: 1,
-          parent: {
-            $cond: [{ $eq: ["$parent", {}] }, null, "$parent"],
-          },
-        },
-      },
-      //{$limit: Number(limit)}
-    ]);
-  },
-};
+      })
+    );
+  }
+}
+
+module.exports = new PostService();

@@ -1,9 +1,9 @@
 var express = require("express");
 var router = express.Router();
 
-const FriendsService = require("../bin/services/FriendsService");
-const UserService = require("../bin/services/UserService");
-const PostService = require("../bin/services/PostService");
+const FriendsMapper = require("../bin/dataAccess/FriendsMapper");
+const UserMapper = require("../bin/dataAccess/UserMapper");
+const PostMapper = require("../bin/dataAccess/PostMapper");
 const CloudinaryService = require("../bin/services/CloudinaryService");
 const authMdw = require("../bin/middleware/authMdw").auth;
 
@@ -15,17 +15,17 @@ router.get("/:username", authMdw, async function (req, res) {
   const theUser = req.user;
 
   try {
-    let user = await UserService.findByName(username);
+    let user = await UserMapper.findByName(username);
 
     const executeInParallel = [
       (async () => {
-        const accepted = await FriendsService.friends(user).exec();
+        const accepted = await FriendsMapper.friends(user).exec();
 
-        const posts = await PostService.getTimeline(user, accepted);
+        const posts = await PostMapper.getTimeline(user, accepted);
 
         await Promise.all(
           posts.map(async (post) => {
-            const replies = await PostService.getReplys(post);
+            const replies = await PostMapper.getReplys(post);
             post.rep = replies;
             return post;
           })
@@ -35,20 +35,20 @@ router.get("/:username", authMdw, async function (req, res) {
       })(),
 
       (async () => {
-        const pending = await FriendsService.friendRequestsPending(user);
+        const pending = await FriendsMapper.friendRequestsPending(user);
 
         const friendsPending = await Promise.all(
           pending.map(async (relation) => {
-            return await UserService.findById(relation.user_id);
+            return await UserMapper.findById(relation.user_id);
           })
         );
 
         return friendsPending;
       })(),
 
-      FriendsService.hasSentRequest(theUser, user),
-      FriendsService.hasFriendRequest(theUser, user),
-      FriendsService.isFriendWith(theUser, user),
+      FriendsMapper.hasSentRequest(theUser, user),
+      FriendsMapper.hasFriendRequest(theUser, user),
+      FriendsMapper.isFriendWith(theUser, user),
     ];
 
     Promise.all(executeInParallel).then((results) => {
