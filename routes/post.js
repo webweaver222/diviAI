@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMdw = require("../bin/middleware/authMdw").auth;
-const PostService = require("../bin/services/PostService");
+
 const {
   validPost,
   processPost,

@@ -2,17 +2,21 @@ const cloudinary = require("cloudinary").v2;
 const {
   cloud_name,
   api_key,
-  api_secret
+  api_secret,
 } = require("../../config.json").cloudinary;
 
-module.exports = function() {
-  cloudinary.config({
-    cloud_name,
-    api_key,
-    api_secret
-  });
+class CloudinaryService {
+  constructor() {
+    cloudinary.config({
+      cloud_name,
+      api_key,
+      api_secret,
+    });
+  }
 
-  this.save = function(base64) {
+  save(base64) {
     return cloudinary.uploader.upload(base64);
-  };
-};
+  }
+}
+
+module.exports = new CloudinaryService();
