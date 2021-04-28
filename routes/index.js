@@ -1,6 +1,5 @@
 var express = require("express");
 var router = express.Router();
-const User = require("../bin/models/User");
 const authMdw = require("../bin/middleware/authMdw").auth;
 
 /* GET home page. */
@@ -13,9 +12,3 @@ router.get("/", authMdw, async function (req, res, next) {
 });
 
 module.exports = router;
-
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}

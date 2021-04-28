@@ -1,84 +1,41 @@
 const express = require("express");
 var router = express.Router();
 const authMdw = require("../bin/middleware/authMdw").auth;
-const UserService = require("../bin/services/UserService");
 const FriendsService = require("../bin/services/FriendsService");
 
 router.post("/add", authMdw, async function (req, res) {
   const user = req.user;
+  try {
+    const friend = await FriendsService.addFriend(req.body.friend_id, user);
 
-  const friend = await UserService.findById(req.body.friend_id);
-
-  //dont try to befriend yourself
-  if (user._id === friend._id) {
-    return res.end();
+    res.send({ msg: `You send reqest to ${friend.username}` });
+  } catch (e) {
+    console.log(e);
+    res.status(500).send(e);
   }
-
-  //if no such user
-  if (!friend) {
-    return res.status(400).send({ msg: "No such user was found" });
-  }
-
-  //if friend reqest already was send
-  if (
-    Boolean(await FriendsService.hasSentRequest(user, friend)) ||
-    Boolean(await FriendsService.hasFriendRequest(user, friend))
-  ) {
-    return res.send({ msg: "Friend request is already pending" });
-  }
-
-  // if already are friends
-  if (
-    (await FriendsService.isFriendWith(user, friend)).length > 0 ? true : false
-  ) {
-    return res.send({ msg: "You are friends with that user" });
-  }
-
-  await FriendsService.addFriend(user, friend);
-
-  return res.send({ msg: `You send reqest to ${friend.username}` });
 });
 
 router.post("/accept", authMdw, async function (req, res) {
   const user = req.user;
-
-  const friend = await UserService.findById(req.body.friend_id);
-
-  if (!friend) {
-    return res.status(400).send({ msg: "No such user was found" });
-  }
-  //if user did not have request pending from specific user(friend)
-  if (!Boolean(await FriendsService.hasFriendRequest(user, friend))) {
-    return res.send({ msg: "You dont have friend request from thar user" });
-  }
-
   try {
-    await FriendsService.acceptFriendRequest(user, friend);
+    const friend = await FriendsService.acceptFriend(req.body.friend_id, user);
+
     return res.send({ msg: `You just added ${friend.email}` });
   } catch (e) {
     console.log(e);
+    res.status(500).send(e);
   }
 });
 
 router.post("/remove", authMdw, async function (req, res) {
   const user = req.user;
 
-  const friend = await UserService.findById(req.body.friend_id);
-
-  if (!friend) {
-    return res.status(400).send({ msg: "No such user was found" });
+  try {
+    await FriendsService.removeFriend(req.body.friend_id, user);
+    res.status(200).end();
+  } catch (e) {
+    console.log(e);
+    res.status(500).send(e);
   }
-
-  if (
-    !((await FriendsService.isFriendWith(user, friend)).length > 0)
-      ? true
-      : false
-  ) {
-    return res.send({ msg: "You are not friends with that user" });
-  }
-
-  await FriendsService.deleteFriend(user, friend);
-
-  return res.status(200).end();
 });
 module.exports = router;

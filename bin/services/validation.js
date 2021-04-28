@@ -1,5 +1,5 @@
 const validator = require("validator");
-const UserService = require("./UserService");
+const UserMapper = require("../dataAccess/UserMapper");
 
 const v = {
   errors: {},
@@ -32,18 +32,8 @@ const v = {
       this.errors["username"].push("No username provided");
     }
 
-    /*if (validator.isEmpty(userData.repass)) {
-            this.errors['repass'] = []
-            this.errors['repass'].push('No password provided')
-        }
-
-        if (userData.password !== userData.repass) {
-            if (!this.errors.hasOwnProperty('repass')) this.errors['repass'] = []
-            this.errors['repass'].push('Passwords do not match')
-        }*/
-
     try {
-      const user = await UserService.findByEmail(userData.email);
+      const user = await UserMapper.findByEmail(userData.email);
 
       if (user) {
         if (!this.errors.hasOwnProperty("email")) this.errors["email"] = [];
