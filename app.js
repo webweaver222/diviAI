@@ -22,7 +22,7 @@ var postRouter = require("./routes/post");
 var app = express();
 
 var corsOptions = {
-  origin: "http://localhost:8000",
+  origin: "http://localhost",
   optionsSuccessStatus: 200,
   credentials: true,
 };

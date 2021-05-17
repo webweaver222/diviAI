@@ -5,7 +5,7 @@ const WebSocket = require("ws");
 
 var server = http.createServer(app);
 
-server.listen(process.env.PORT || "3000");
+server.listen(process.env.PORT || "3001");
 server.on("error", onError);
 server.on("listening", onListening);
 
