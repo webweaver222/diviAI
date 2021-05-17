@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 
 class Auth {
   async signup(cred) {
-    let user = UserService.createUser(cred);
+    let user = UserMapper.createUser(cred);
 
     user = await user.save();
 
